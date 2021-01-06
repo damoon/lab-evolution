@@ -15,8 +15,8 @@ import (
 	"github.com/llgcode/draw2d/draw2dimg"
 )
 
-const triangleCount = 20
-const populationCount = 500
+const triangleCount = 10
+const populationCount = 20
 
 func main() {
 	err := run()
@@ -31,7 +31,7 @@ func run() error {
 		return err
 	}
 
-	genSize := 3 + triangleCount*(3+6*16)
+	genSize := triangleCount * (3 + 6*2)
 
 	r := rand.New(rand.NewSource(0))
 
@@ -42,10 +42,10 @@ func run() error {
 	championImage := genReaderToImage(evolution.GenomeReader{Gens: champion.Genes}, img)
 	draw2dimg.SaveToPngFile("0.png", championImage)
 
-	//	for j, champion := range population {
-	//		championImage := genReaderToImage(evolution.GenomeReader{Gens: champion.Genes}, img)
-	//		draw2dimg.SaveToPngFile(fmt.Sprintf("_0_%d.png", j), championImage)
-	//	}
+	//for j, champion := range population {
+	//	championImage := genReaderToImage(evolution.GenomeReader{Gens: champion.Genes}, img)
+	//	draw2dimg.SaveToPngFile(fmt.Sprintf("_0_%d.png", j), championImage)
+	//}
 
 	for i := 0; i < 30; i++ {
 		log.Printf("generation %d", i)
@@ -54,7 +54,7 @@ func run() error {
 			eva(img),
 			fit,
 			evolution.SimpleParentSelector,
-			evolution.SimpleGenExchange,
+			FeatureBasedGenExchange,
 			evolution.SimpleMutation,
 		)
 
@@ -63,10 +63,10 @@ func run() error {
 		championImage := genReaderToImage(evolution.GenomeReader{Gens: champion.Genes}, img)
 		draw2dimg.SaveToPngFile(fmt.Sprintf("%d.png", i+1), championImage)
 
-		//		for j, champion := range population {
-		//			championImage := genReaderToImage(evolution.GenomeReader{Gens: champion.Genes}, img)
-		//			draw2dimg.SaveToPngFile(fmt.Sprintf("_%d_%d.png", i+1, j), championImage)
-		//		}
+		//for j, champion := range population {
+		//	championImage := genReaderToImage(evolution.GenomeReader{Gens: champion.Genes}, img)
+		//	draw2dimg.SaveToPngFile(fmt.Sprintf("_%d_%d.png", i+1, j), championImage)
+		//}
 		var eval float32 = 0.0
 		for _, champion := range population {
 			eval += champion.Evaluation
@@ -76,6 +76,53 @@ func run() error {
 	}
 
 	return nil
+}
+
+func FeatureBasedGenExchange(r *rand.Rand, mother, father evolution.Lifeform) evolution.Genome {
+
+	genSize := len(mother.Genes)
+	genome := make([]byte, genSize)
+	genWriter := evolution.GenomeWriter{Gens: genome}
+
+	for i := 0; i < triangleCount; i++ {
+		selected := evolution.GenomeReader{Gens: mother.Genes}
+		if r.Int()%2 == 0 {
+			selected = evolution.GenomeReader{Gens: father.Genes}
+		}
+
+		genWriter.Write(selected.Uint8())
+		genWriter.Write(selected.Uint8())
+		genWriter.Write(selected.Uint8())
+
+		genWriter.WriteUint16(selected.Uint16())
+		genWriter.WriteUint16(selected.Uint16())
+		genWriter.WriteUint16(selected.Uint16())
+		genWriter.WriteUint16(selected.Uint16())
+		genWriter.WriteUint16(selected.Uint16())
+		genWriter.WriteUint16(selected.Uint16())
+	}
+
+	return genome
+}
+
+// SimpleMutation flipes a random bit with a 1 in 100 propability.
+func FeatureBasedMutation(r *rand.Rand, g evolution.Genome) evolution.Genome {
+	if r.Int()%2 != 0 {
+		return g
+	}
+
+	if r.Int()%2 != 0 {
+		genSize := len(g)
+
+		pivotBytes := r.Int() % genSize
+		pivotBits := r.Int() % 9 // 9 so allow shifting to generate all values from 0 to 255
+
+		var pivotBitsMask byte = 1 << pivotBits
+
+		g[pivotBytes] ^= pivotBitsMask
+	}
+
+	return FeatureBasedMutation(r, g)
 }
 
 func fit(v, min, max float32) float32 {
@@ -99,9 +146,9 @@ func genReaderToImage(genReader evolution.GenomeReader, target image.Image) imag
 	dest := image.NewRGBA(target.Bounds())
 
 	background := color.RGBA{
-		genReader.Uint8(),
-		genReader.Uint8(),
-		genReader.Uint8(),
+		0,
+		0,
+		0,
 		0xff,
 	}
 	draw.Draw(dest, dest.Bounds(), &image.Uniform{background}, image.ZP, draw.Src)
@@ -113,7 +160,7 @@ func genReaderToImage(genReader evolution.GenomeReader, target image.Image) imag
 			genReader.Uint8(),
 			genReader.Uint8(),
 			genReader.Uint8(),
-			0x88,
+			0xff,
 		}
 
 		// Set some properties

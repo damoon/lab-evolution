@@ -264,3 +264,23 @@ func (gr *GenomeReader) Length() int {
 func (gr *GenomeReader) Seek(i int) {
 	gr.idx = i
 }
+
+type GenomeWriter struct {
+	Gens Genome
+	idx  int
+}
+
+func (gr *GenomeWriter) Write(b byte) {
+	gr.Gens[gr.idx] = b
+	gr.idx += 1
+}
+
+func (gr *GenomeWriter) WriteUint16(i uint16) {
+	b := make([]byte, 2)
+	binary.LittleEndian.PutUint16(b, uint16(i))
+
+	gr.Gens[gr.idx] = b[0]
+	gr.idx += 1
+	gr.Gens[gr.idx] = b[1]
+	gr.idx += 1
+}
