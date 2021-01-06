@@ -21,8 +21,8 @@ func TestSimpleGenExchange(t *testing.T) {
 			name: "a few bits from father",
 			args: args{
 				r:      rand.New(rand.NewSource(0)),
-				mother: Lifeform{genes: []byte{0, 0, 0}},
-				father: Lifeform{genes: []byte{255, 255, 255}},
+				mother: Lifeform{Genes: []byte{0, 0, 0}},
+				father: Lifeform{Genes: []byte{255, 255, 255}},
 			},
 			want: []byte{0, 0, 63},
 		},
@@ -30,8 +30,8 @@ func TestSimpleGenExchange(t *testing.T) {
 			name: "a few bits from mother",
 			args: args{
 				r:      rand.New(rand.NewSource(4)),
-				mother: Lifeform{genes: []byte{0, 0, 0}},
-				father: Lifeform{genes: []byte{255, 255, 255}},
+				mother: Lifeform{Genes: []byte{0, 0, 0}},
+				father: Lifeform{Genes: []byte{255, 255, 255}},
 			},
 			want: []byte{7, 255, 255},
 		},
@@ -39,8 +39,8 @@ func TestSimpleGenExchange(t *testing.T) {
 			name: "a few of both",
 			args: args{
 				r:      rand.New(rand.NewSource(6)),
-				mother: Lifeform{genes: []byte{0, 0, 0}},
-				father: Lifeform{genes: []byte{255, 255, 255}},
+				mother: Lifeform{Genes: []byte{0, 0, 0}},
+				father: Lifeform{Genes: []byte{255, 255, 255}},
 			},
 			want: []byte{0, 7, 255},
 		},
